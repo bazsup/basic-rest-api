@@ -10,6 +10,7 @@ func main() {
 
 	userRoutes := r.Group("/users")
 	userRoutes.GET("/", user.UserHandler(user.FindAllUsers()))
+	userRoutes.POST("/", user.NewHandler(user.SaveUser()))
 
 	r.Run()
 }
