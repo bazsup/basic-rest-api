@@ -42,7 +42,7 @@ func NewHandler(save SaveFunc, now func() time.Time) gin.HandlerFunc {
 			return
 		}
 
-		n := now()
+		n := now().UTC()
 		userForSave := req.User()
 		userForSave.CreatedAt = n
 		userForSave.UpdatedAt = n
