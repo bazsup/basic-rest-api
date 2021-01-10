@@ -39,6 +39,11 @@ func main() {
 		userRoutes.GET("/:id", user.GetOneHandler(
 			user.FindById(db, viper.GetString("db.table.user")),
 		))
+		userRoutes.PATCH("/:id", user.UpdateHandler(
+			user.UpdateUser(db, viper.GetString("db.table.user")),
+			user.FindById(db, viper.GetString("db.table.user")),
+			time.Now,
+		))
 	}
 
 	r.Run()
