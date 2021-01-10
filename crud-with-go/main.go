@@ -44,6 +44,10 @@ func main() {
 			user.FindById(db, viper.GetString("db.table.user")),
 			time.Now,
 		))
+		userRoutes.DELETE("/:id", user.DeleteHandler(
+			user.Delete(db, viper.GetString("db.table.user")),
+			user.FindById(db, viper.GetString("db.table.user")),
+		))
 	}
 
 	r.Run()
