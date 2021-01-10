@@ -1,18 +1,19 @@
 include .env
-DB_CONNECTION = mysql://$(DB_USER):$(DB_PASSWORD)@tcp($(DB_HOST):3306)/$(DB_NAME)?multiStatements=true
+
+DB_CONNECTION = "mysql://$(DB_CONN_STRING)"
 
 run:
-	go run main.go
+	PORT=8080 go run main.go
 
 test:
 	go test -v ./...
 
 migrate-up:
-	migrate -database "$(DB_CONNECTION)" \
+	migrate -database $(DB_CONNECTION) \
 	-path db/migrations up
 
 migrate-down:
-	migrate -database "$(DB_CONNECTION)" \
+	migrate -database $(DB_CONNECTION) \
 	-path db/migrations down
 
 make-migration:

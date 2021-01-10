@@ -1,6 +1,9 @@
 package user
 
 import (
+	"database/sql"
+	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -17,11 +20,24 @@ type User struct {
 
 type findAllFunc func() ([]User, error)
 
-func FindAllUsers() findAllFunc {
+func FindAllUsers(db *sql.DB, tableName string) findAllFunc {
 	return func() ([]User, error) {
-		users := []User{
-			{ID: 1, Name: "Alice"},
-			{ID: 2, Name: "Bob"},
+		stmt := fmt.Sprintf(`
+			SELECT id, name, created_at, updated_at FROM %s
+		`, tableName)
+
+		rows, err := db.Query(stmt)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer rows.Close()
+		users := make([]User, 0)
+		for rows.Next() {
+			var u User
+			if err := rows.Scan(&u.ID, &u.Name, &u.CreatedAt, &u.UpdatedAt); err != nil {
+				log.Fatal(err)
+			}
+			users = append(users, u)
 		}
 
 		return users, nil
