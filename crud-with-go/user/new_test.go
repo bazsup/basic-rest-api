@@ -8,8 +8,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 
+	"github.com/bazsup/crud-with-go/testhelper"
 	"github.com/bazsup/crud-with-go/user"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -19,11 +19,6 @@ func mockNewUserClosure(u user.User) user.SaveFunc {
 	return func(user.User) (int64, error) {
 		return 1, nil
 	}
-}
-
-func mockNow() time.Time {
-	now, _ := time.Parse(time.RFC3339, "2021-01-10T15:00:00Z")
-	return now
 }
 
 func jsonCompact(str string) string {
@@ -42,7 +37,7 @@ func TestNewHandler(t *testing.T) {
 
 		createdUser := user.User{ID: 1, Name: "bas"}
 
-		h := user.NewHandler(mockNewUserClosure(createdUser), mockNow)
+		h := user.NewHandler(mockNewUserClosure(createdUser), testhelper.MockNow)
 		r.POST("/users", h)
 
 		payload := strings.NewReader(`{
@@ -70,7 +65,7 @@ func TestNewHandler(t *testing.T) {
 		r := gin.Default()
 
 		createdUser := user.User{ID: 1, Name: "bas"}
-		h := user.NewHandler(mockNewUserClosure(createdUser), mockNow)
+		h := user.NewHandler(mockNewUserClosure(createdUser), testhelper.MockNow)
 		r.POST("/users", h)
 
 		req := httptest.NewRequest(http.MethodPost, "/users", nil)

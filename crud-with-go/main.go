@@ -36,6 +36,9 @@ func main() {
 			user.SaveUser(db, viper.GetString("db.table.user")),
 			time.Now,
 		))
+		userRoutes.GET("/:id", user.GetOneHandler(
+			user.FindById(db, viper.GetString("db.table.user")),
+		))
 	}
 
 	r.Run()
