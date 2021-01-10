@@ -38,7 +38,6 @@ func GetOneHandler(findById FindByIdFunc) gin.HandlerFunc {
 			return
 		}
 
-		fmt.Println(id)
 		u, err := findById(id)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{
