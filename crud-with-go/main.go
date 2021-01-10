@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -14,6 +15,7 @@ import (
 
 func init() {
 	initConfig()
+	log.SetFlags(log.Lshortfile | log.LstdFlags)
 }
 
 func main() {
@@ -30,7 +32,10 @@ func main() {
 		userRoutes.GET("/", user.UserHandler(
 			user.FindAllUsers(db, viper.GetString("db.table.user")),
 		))
-		userRoutes.POST("/", user.NewHandler(user.SaveUser()))
+		userRoutes.POST("/", user.NewHandler(
+			user.SaveUser(db, viper.GetString("db.table.user")),
+			time.Now,
+		))
 	}
 
 	r.Run()

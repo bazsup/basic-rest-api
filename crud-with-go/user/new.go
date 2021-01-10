@@ -1,24 +1,38 @@
 package user
 
 import (
+	"database/sql"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-type UserRequest struct {
-	Name string `json:"name" binding:"required"`
-}
+type SaveFunc func(User) (int64, error)
 
-type SaveFunc func(u User) (User, error)
+func SaveUser(db *sql.DB, tableName string) SaveFunc {
+	return func(u User) (int64, error) {
+		sql := fmt.Sprintf(`
+			INSERT into %s (name, created_at, updated_at)
+			VALUES (?, ?, ?);
+		`, tableName)
 
-func SaveUser() SaveFunc {
-	return func(u User) (User, error) {
-		return User{}, nil
+		stmt, err := db.Prepare(sql)
+		if err != nil {
+			return -1, err
+		}
+
+		rs, err := stmt.Exec(u.Name, u.CreatedAt, u.UpdatedAt)
+		if err != nil {
+			return -1, err
+		}
+
+		return rs.LastInsertId()
 	}
 }
 
-func NewHandler(save SaveFunc) gin.HandlerFunc {
+func NewHandler(save SaveFunc, now func() time.Time) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req UserRequest
 		if err := c.Bind(&req); err != nil {
@@ -28,6 +42,19 @@ func NewHandler(save SaveFunc) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusCreated, req)
+		n := now()
+		userForSave := req.User()
+		userForSave.CreatedAt = n
+		userForSave.UpdatedAt = n
+		id, err := save(userForSave)
+		if err != nil {
+			c.JSON(http.StatusBadGateway, gin.H{
+				"err": err.Error(),
+			})
+			return
+		}
+
+		userForSave.ID = id
+		c.JSON(http.StatusCreated, response(userForSave))
 	}
 }

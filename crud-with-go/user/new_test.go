@@ -1,11 +1,14 @@
 package user_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/bazsup/crud-with-go/user"
 	"github.com/gin-gonic/gin"
@@ -13,9 +16,23 @@ import (
 )
 
 func mockNewUserClosure(u user.User) user.SaveFunc {
-	return func(user.User) (user.User, error) {
-		return u, nil
+	return func(user.User) (int64, error) {
+		return 1, nil
 	}
+}
+
+func mockNow() time.Time {
+	now, _ := time.Parse(time.RFC3339, "2021-01-10T15:00:00Z")
+	return now
+}
+
+func jsonCompact(str string) string {
+	jsonByte := []byte(str)
+	buffer := new(bytes.Buffer)
+	if err := json.Compact(buffer, jsonByte); err != nil {
+		panic(err)
+	}
+	return buffer.String()
 }
 
 func TestNewHandler(t *testing.T) {
@@ -24,7 +41,8 @@ func TestNewHandler(t *testing.T) {
 		r := gin.Default()
 
 		createdUser := user.User{ID: 1, Name: "bas"}
-		h := user.NewHandler(mockNewUserClosure(createdUser))
+
+		h := user.NewHandler(mockNewUserClosure(createdUser), mockNow)
 		r.POST("/users", h)
 
 		payload := strings.NewReader(`{
@@ -35,7 +53,12 @@ func TestNewHandler(t *testing.T) {
 		r.ServeHTTP(w, req)
 		res := w.Result()
 
-		expected := `{"name":"bas"}`
+		expected := jsonCompact(`{
+			"id": 1,
+			"name": "bas",
+			"created_at": "2021-01-10T15:00:00Z",
+			"updated_at": "2021-01-10T15:00:00Z"
+		}`)
 		body, _ := ioutil.ReadAll(res.Body)
 
 		assert.Equal(t, http.StatusCreated, res.StatusCode)
@@ -47,7 +70,7 @@ func TestNewHandler(t *testing.T) {
 		r := gin.Default()
 
 		createdUser := user.User{ID: 1, Name: "bas"}
-		h := user.NewHandler(mockNewUserClosure(createdUser))
+		h := user.NewHandler(mockNewUserClosure(createdUser), mockNow)
 		r.POST("/users", h)
 
 		req := httptest.NewRequest(http.MethodPost, "/users", nil)
