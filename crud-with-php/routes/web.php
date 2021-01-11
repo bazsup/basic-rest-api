@@ -16,3 +16,11 @@
 $router->get('/', function () use ($router) {
     return $router->app->version();
 });
+
+$router->group(['prefix' => 'posts'], function () use ($router) {
+    $router->get('', 'PostController@index');
+    $router->post('', 'PostController@create');
+    $router->get('/{id:[\d]+}', 'PostController@getById');
+    $router->patch('/{id:[\d]+}', 'PostController@update');
+    $router->delete('/{id:[\d]+}', 'PostController@delete');
+});
